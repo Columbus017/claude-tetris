@@ -164,3 +164,76 @@ kbd {
 #restart-btn:hover {
   background: #9bbdff;
 }
+
+/* ---- Theme toggle button ---- */
+#theme-toggle {
+  background: #22223a;
+  color: #aaa;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 1px;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+#theme-toggle:hover {
+  background: #2a2a4a;
+}
+
+/* ---- Light mode ---- */
+body.light-mode {
+  background: #f0f0f5;
+  color: #1a1a2e;
+}
+
+body.light-mode .game-title {
+  color: #4a72c7;
+  text-shadow: 0 0 20px rgba(74, 114, 199, 0.3);
+}
+
+body.light-mode #board,
+body.light-mode #next-canvas {
+  background: #e8e8f0;
+  border-color: #c0c0d0;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .label {
+  color: #9090a8;
+}
+
+body.light-mode .value {
+  color: #4a72c7;
+}
+
+body.light-mode #overlay-score {
+  color: #4a72c7;
+}
+
+body.light-mode .controls li {
+  color: #555;
+}
+
+body.light-mode kbd {
+  background: #d8d8e8;
+  border-color: #b0b0c8;
+  color: #444;
+}
+
+body.light-mode .overlay {
+  background: rgba(220, 220, 240, 0.85);
+}
+
+body.light-mode #theme-toggle {
+  background: #d8d8e8;
+  border-color: #b0b0c8;
+  color: #444;
+}
+
+body.light-mode #theme-toggle:hover {
+  background: #c8c8d8;
+}
