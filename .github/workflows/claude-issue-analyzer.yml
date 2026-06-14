@@ -1,0 +1,60 @@
+name: Claude Issue Analyzer
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  analyze-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Analyze issue with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowed-tools "Bash(gh issue *)"'
+          prompt: |
+            You are a Tetris game triage assistant. A GitHub issue has just been opened or edited.
+
+            Repository context (3 files, no build step, no dependencies):
+            - index.html: DOM/canvas structure — game board canvas 300×600px, next-piece preview canvas 120×120px, HUD spans (#score, #lines, #level), #overlay for pause/game-over states.
+            - style.css: dark/retro theme with backdrop-filter overlay.
+            - game.js: ~300 lines, all game logic:
+              - Board: ROWS×COLS matrix; 0=empty, 1–7=piece color index
+              - collide(shape, ox, oy): bounds + occupancy check
+              - rotateCW / tryRotate: transpose+row-reverse with wall kicks [0,-1,1,-2,2]
+              - Game loop: requestAnimationFrame; dropAccum triggers row drop when > dropInterval
+              - Speed: dropInterval = max(100, 1000−(level−1)×90) ms
+              - clearLines: splices full rows bottom-up, unshifts empty rows at top
+              - ghostY(): projects current piece downward; drawn at globalAlpha=0.2
+              - init(): resets all state, starts loop
+
+            Issue number: ${{ github.event.issue.number }}
+
+            Your tasks:
+            1. Read the issue with: gh issue view ${{ github.event.issue.number }}
+            2. Choose one or more labels that apply from this set:
+               bug, enhancement, question, documentation, performance, ui, game-logic, needs-info
+            3. Apply the labels: gh issue edit ${{ github.event.issue.number }} --add-label "<comma-separated labels>"
+            4. Post a diagnosis comment: gh issue comment ${{ github.event.issue.number }} --body "<markdown>"
+
+            The diagnosis comment must follow this structure:
+            ## Issue Diagnosis
+
+            **Category:** <applied label(s)>
+
+            **Summary:** <one-sentence description of the problem or request>
+
+            **Likely cause / area:** <which file and function/section is involved, and why>
+
+            **Suggested approach:** <concrete description of what change would fix or implement this — reference specific functions or constants from game.js where applicable>
