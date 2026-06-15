@@ -13,6 +13,7 @@ const COLORS = [
   '#e57373', // Z - red
   '#64b5f6', // J - pale blue
   '#ffb74d', // L - orange
+  '#90a4ae', // Nut - steel gray
 ];
 
 const PIECES = [
@@ -24,6 +25,7 @@ const PIECES = [
   [[5,5,0],[0,5,5],[0,0,0]],                  // Z
   [[6,0,0],[6,6,6],[0,0,0]],                  // J
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
+  [[8,8,8],[8,0,8],[8,8,8]],                  // Nut (3×3 ring, empty center)
 ];
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
@@ -47,7 +49,7 @@ function createBoard() {
 }
 
 function randomPiece() {
-  const type = Math.floor(Math.random() * 7) + 1;
+  const type = Math.floor(Math.random() * 8) + 1;
   const shape = PIECES[type].map(row => [...row]);
   return { type, shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
 }
@@ -169,6 +171,24 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   context.globalAlpha = 1;
 }
 
+function drawNutHole(context, x, y, size, alpha) {
+  const cx = x * size + size / 2;
+  const cy = y * size + size / 2;
+  const r = size * 0.32;
+  const isLight = document.body.classList.contains('light-mode');
+  context.globalAlpha = alpha ?? 1;
+  context.beginPath();
+  context.arc(cx, cy, r + 1.5, 0, Math.PI * 2);
+  context.strokeStyle = 'rgba(0,0,0,0.4)';
+  context.lineWidth = 2;
+  context.stroke();
+  context.beginPath();
+  context.arc(cx, cy, r, 0, Math.PI * 2);
+  context.fillStyle = isLight ? '#e8e8f0' : '#1a1a25';
+  context.fill();
+  context.globalAlpha = 1;
+}
+
 function drawGrid() {
   ctx.strokeStyle = document.body.classList.contains('light-mode') ? '#c8c8d8' : '#22222e';
   ctx.lineWidth = 0.5;
@@ -195,17 +215,30 @@ function draw() {
     for (let c = 0; c < COLS; c++)
       drawBlock(ctx, c, r, board[r][c], BLOCK);
 
+  // locked nut holes: center cell is 0 but surrounded by 8s
+  for (let r = 1; r < ROWS - 1; r++)
+    for (let c = 1; c < COLS - 1; c++)
+      if (!board[r][c] &&
+          board[r-1][c-1] === 8 && board[r-1][c] === 8 && board[r-1][c+1] === 8 &&
+          board[r][c-1]   === 8 &&                         board[r][c+1]   === 8 &&
+          board[r+1][c-1] === 8 && board[r+1][c] === 8 && board[r+1][c+1] === 8)
+        drawNutHole(ctx, c, r, BLOCK);
+
   // ghost
   const gy = ghostY();
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       if (current.shape[r][c])
         drawBlock(ctx, current.x + c, gy + r, current.shape[r][c], BLOCK, 0.2);
+  if (current.type === 8)
+    drawNutHole(ctx, current.x + 1, gy + 1, BLOCK, 0.2);
 
   // current piece
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       drawBlock(ctx, current.x + c, current.y + r, current.shape[r][c], BLOCK);
+  if (current.type === 8)
+    drawNutHole(ctx, current.x + 1, current.y + 1, BLOCK);
 }
 
 function drawNext() {
@@ -217,6 +250,8 @@ function drawNext() {
   for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++)
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
+  if (next.type === 8)
+    drawNutHole(nextCtx, offX + 1, offY + 1, NB);
 }
 
 function endGame() {
