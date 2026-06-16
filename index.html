@@ -45,6 +45,12 @@
         <div class="panel-section">
           <button id="theme-toggle">☀ Light Mode</button>
         </div>
+
+        <div class="panel-section" id="records-section">
+          <span class="label">RÉCORDS</span>
+          <div id="sidebar-scores"></div>
+          <button id="clear-scores-btn">Borrar récords</button>
+        </div>
       </aside>
     </div>
 
@@ -52,6 +58,12 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+        <div id="name-entry" class="hidden">
+          <p class="overlay-label">¡Entraste al top 5!</p>
+          <input id="name-input" type="text" maxlength="12" placeholder="Tu nombre" autocomplete="off" />
+          <button id="save-score-btn">Guardar</button>
+        </div>
+        <div id="overlay-scores"></div>
         <button id="restart-btn">Reiniciar</button>
       </div>
     </div>

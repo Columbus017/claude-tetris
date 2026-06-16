@@ -237,3 +237,168 @@ body.light-mode #theme-toggle {
 body.light-mode #theme-toggle:hover {
   background: #c8c8d8;
 }
+
+/* ---- Leaderboard table ---- */
+.scores-table {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  border-collapse: collapse;
+  width: 100%;
+  color: #bbb;
+}
+
+.scores-table th {
+  color: #7aa2f7;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 2px 4px;
+  text-align: left;
+  border-bottom: 1px solid #2a2a3a;
+  font-weight: 600;
+}
+
+.scores-table td {
+  padding: 3px 4px;
+  color: #bbb;
+}
+
+.scores-table tr.highlight-row td {
+  color: #ffd54f;
+  font-weight: 700;
+}
+
+.no-scores {
+  font-size: 11px;
+  color: #555570;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ---- Name entry (overlay) ---- */
+#name-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+#name-entry.hidden {
+  display: none;
+}
+
+.overlay-label {
+  font-size: 12px;
+  color: #7aa2f7;
+  letter-spacing: 1px;
+}
+
+#name-input {
+  background: #1a1a25;
+  border: 1px solid #7aa2f7;
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: #e0e0e0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  text-align: center;
+  width: 160px;
+  outline: none;
+  user-select: text;
+}
+
+#name-input:focus {
+  border-color: #9bbdff;
+}
+
+#save-score-btn {
+  background: #3a7a58;
+  color: #e0e0e0;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+
+#save-score-btn:hover {
+  background: #4a9068;
+}
+
+/* ---- Overlay scores table ---- */
+#overlay-scores {
+  width: 100%;
+  max-width: 280px;
+}
+
+/* ---- Sidebar records ---- */
+#clear-scores-btn {
+  background: transparent;
+  color: #555570;
+  border: 1px solid #2a2a3a;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  width: 100%;
+  transition: background 0.15s, color 0.15s;
+}
+
+#clear-scores-btn:hover {
+  background: #22223a;
+  color: #aaa;
+}
+
+/* ---- Light mode additions ---- */
+body.light-mode .scores-table th {
+  color: #4a72c7;
+  border-bottom-color: #c0c0d0;
+}
+
+body.light-mode .scores-table td {
+  color: #444;
+}
+
+body.light-mode .scores-table tr.highlight-row td {
+  color: #a06000;
+}
+
+body.light-mode .no-scores {
+  color: #9090a8;
+}
+
+body.light-mode .overlay-label {
+  color: #4a72c7;
+}
+
+body.light-mode #name-input {
+  background: #e8e8f0;
+  border-color: #4a72c7;
+  color: #1a1a2e;
+}
+
+body.light-mode #name-input:focus {
+  border-color: #3a62b7;
+}
+
+body.light-mode #save-score-btn {
+  background: #2a6a48;
+  color: #f0f0f5;
+}
+
+body.light-mode #save-score-btn:hover {
+  background: #3a7a58;
+}
+
+body.light-mode #clear-scores-btn {
+  color: #9090a8;
+  border-color: #c0c0d0;
+}
+
+body.light-mode #clear-scores-btn:hover {
+  background: #d8d8e8;
+  color: #444;
+}
