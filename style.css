@@ -165,6 +165,33 @@ kbd {
   background: #9bbdff;
 }
 
+/* ---- Skin selector ---- */
+#skin-select {
+  background: #22223a;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  width: 100%;
+  cursor: pointer;
+  appearance: auto;
+}
+
+#skin-select:focus {
+  outline: none;
+  border-color: #5a5a8a;
+}
+
+/* ---- Neon skin canvas background ---- */
+body.neon-skin #board,
+body.neon-skin #next-canvas {
+  background: #000000;
+  border-color: #333355;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.15);
+}
+
 /* ---- Theme toggle button ---- */
 #theme-toggle {
   background: #22223a;

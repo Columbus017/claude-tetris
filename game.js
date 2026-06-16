@@ -30,6 +30,80 @@ const PIECES = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+// currentSkin is initialized after SKINS so we can validate against known keys
+let currentSkin;
+
+const SKIN_COLORS = {
+  retro:  [null,'#4dd0e1','#ffd54f','#ba68c8','#81c784','#e57373','#64b5f6','#ffb74d','#90a4ae'],
+  neon:   [null,'#00ffff','#ffff00','#ff00ff','#00ff88','#ff3366','#3399ff','#ff9900','#cccccc'],
+  pastel: [null,'#a8d8ea','#ffeaa7','#dda0dd','#b5ead7','#ffb3ba','#aec6cf','#ffdac1','#c8c8c8'],
+  pixel:  [null,'#4dd0e1','#ffd54f','#ba68c8','#81c784','#e57373','#64b5f6','#ffb74d','#90a4ae'],
+};
+
+const SKINS = {
+  retro: {
+    draw(context, x, y, colorIdx, size, alpha) {
+      const color = SKIN_COLORS.retro[colorIdx];
+      context.globalAlpha = alpha ?? 1;
+      context.fillStyle = color;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+      context.fillStyle = 'rgba(255,255,255,0.12)';
+      context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+      context.globalAlpha = 1;
+    },
+  },
+  neon: {
+    draw(context, x, y, colorIdx, size, alpha) {
+      const color = SKIN_COLORS.neon[colorIdx];
+      context.globalAlpha = alpha ?? 1;
+      context.shadowBlur = 15;
+      context.shadowColor = color;
+      context.fillStyle = color;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+      context.shadowBlur = 0;
+      context.globalAlpha = 1;
+    },
+  },
+  pastel: {
+    draw(context, x, y, colorIdx, size, alpha) {
+      const color = SKIN_COLORS.pastel[colorIdx];
+      context.globalAlpha = alpha ?? 1;
+      context.fillStyle = color;
+      context.beginPath();
+      context.roundRect(x * size + 1, y * size + 1, size - 2, size - 2, 4);
+      context.fill();
+      context.fillStyle = 'rgba(255,255,255,0.12)';
+      context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+      context.globalAlpha = 1;
+    },
+  },
+  pixel: {
+    draw(context, x, y, colorIdx, size, alpha) {
+      const color = SKIN_COLORS.pixel[colorIdx];
+      context.globalAlpha = alpha ?? 1;
+      context.fillStyle = color;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+      context.fillStyle = 'rgba(255,255,255,0.12)';
+      context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+      const dotSize = 2;
+      const step = size / 3;
+      context.fillStyle = 'rgba(0,0,0,0.25)';
+      for (let dr = 0; dr < 3; dr++)
+        for (let dc = 0; dc < 3; dc++)
+          context.fillRect(
+            x * size + step * dc + step / 2 - dotSize / 2,
+            y * size + step * dr + step / 2 - dotSize / 2,
+            dotSize, dotSize
+          );
+      context.globalAlpha = 1;
+    },
+  },
+};
+
+// Validate skin from localStorage against known keys to prevent crashes
+const _storedSkin = localStorage.getItem('tetris_skin');
+currentSkin = (_storedSkin in SKINS) ? _storedSkin : 'retro';
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -161,14 +235,7 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
-  context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  SKINS[currentSkin].draw(context, x, y, colorIndex, size, alpha);
 }
 
 function drawNutHole(context, x, y, size, alpha) {
@@ -176,6 +243,14 @@ function drawNutHole(context, x, y, size, alpha) {
   const cy = y * size + size / 2;
   const r = size * 0.32;
   const isLight = document.body.classList.contains('light-mode');
+  let holeFill;
+  if (isLight) {
+    holeFill = '#e8e8f0';
+  } else if (currentSkin === 'neon') {
+    holeFill = '#000000';
+  } else {
+    holeFill = '#1a1a25';
+  }
   context.globalAlpha = alpha ?? 1;
   context.beginPath();
   context.arc(cx, cy, r + 1.5, 0, Math.PI * 2);
@@ -184,13 +259,20 @@ function drawNutHole(context, x, y, size, alpha) {
   context.stroke();
   context.beginPath();
   context.arc(cx, cy, r, 0, Math.PI * 2);
-  context.fillStyle = isLight ? '#e8e8f0' : '#1a1a25';
+  context.fillStyle = holeFill;
   context.fill();
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
-  ctx.strokeStyle = document.body.classList.contains('light-mode') ? '#c8c8d8' : '#22222e';
+  const isLight = document.body.classList.contains('light-mode');
+  if (isLight) {
+    ctx.strokeStyle = '#c8c8d8';
+  } else if (currentSkin === 'neon') {
+    ctx.strokeStyle = '#222222';
+  } else {
+    ctx.strokeStyle = '#22222e';
+  }
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -343,5 +425,16 @@ themeToggle.addEventListener('click', () => {
   document.body.classList.toggle('light-mode');
   themeToggle.textContent = document.body.classList.contains('light-mode') ? '🌙 Dark Mode' : '☀ Light Mode';
 });
+
+const skinSelect = document.getElementById('skin-select');
+skinSelect.value = currentSkin;
+skinSelect.addEventListener('change', () => {
+  currentSkin = skinSelect.value;
+  localStorage.setItem('tetris_skin', currentSkin);
+  document.body.classList.toggle('neon-skin', currentSkin === 'neon');
+  if (!paused && !gameOver) { draw(); drawNext(); }
+});
+// Apply neon class on load
+document.body.classList.toggle('neon-skin', currentSkin === 'neon');
 
 init();
