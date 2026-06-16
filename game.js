@@ -30,6 +30,8 @@ const PIECES = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+const LS_KEY = 'tetris_scores';
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -41,8 +43,67 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const nameEntry = document.getElementById('name-entry');
+const nameInput = document.getElementById('name-input');
+const saveScoreBtn = document.getElementById('save-score-btn');
+const overlayScoresEl = document.getElementById('overlay-scores');
+const sidebarScoresEl = document.getElementById('sidebar-scores');
+const clearScoresBtn = document.getElementById('clear-scores-btn');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, maxCombo;
+
+// ---- localStorage helpers ----
+
+function loadScores() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveScore(entry) {
+  const scores = loadScores();
+  scores.push(entry);
+  scores.sort((a, b) => b.score - a.score);
+  scores.splice(5);
+  localStorage.setItem(LS_KEY, JSON.stringify(scores));
+  return scores;
+}
+
+function qualifiesForTop5(playerScore) {
+  const scores = loadScores();
+  return scores.length < 5 || playerScore >= scores[scores.length - 1].score;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// ---- Leaderboard rendering ----
+
+function renderScoresTable(scores, highlightIdx, container) {
+  if (!scores || !scores.length) {
+    container.innerHTML = '<p class="no-scores">Sin récords aún</p>';
+    return;
+  }
+  let html = '<table class="scores-table"><thead><tr><th>#</th><th>Nombre</th><th>Pts</th><th>Lín</th><th>Combo</th></tr></thead><tbody>';
+  scores.forEach((s, i) => {
+    const cls = i === highlightIdx ? ' class="highlight-row"' : '';
+    html += `<tr${cls}><td>${i + 1}</td><td>${escapeHtml(s.name)}</td><td>${s.score.toLocaleString()}</td><td>${s.lines}</td><td>${s.maxCombo}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function renderSidebarScores() {
+  renderScoresTable(loadScores(), -1, sidebarScoresEl);
+}
+
+// ---- Board ----
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -106,6 +167,7 @@ function clearLines() {
     }
   }
   if (cleared) {
+    if (cleared > maxCombo) maxCombo = cleared;
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + 1;
@@ -259,6 +321,41 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+
+  overlayScoresEl.innerHTML = '';
+  nameEntry.classList.add('hidden');
+  saveScoreBtn.onclick = null;
+  nameInput.onkeydown = null;
+
+  if (qualifiesForTop5(score)) {
+    // Snapshot game state now — outer lets will be reset by init() on restart
+    const finalScore = score;
+    const finalLines = lines;
+    const finalMaxCombo = maxCombo;
+
+    nameEntry.classList.remove('hidden');
+    nameInput.value = '';
+    setTimeout(() => nameInput.focus(), 50);
+
+    let saved = false;
+    const doSave = () => {
+      if (saved) return;
+      const name = nameInput.value.trim() || 'Anónimo';
+      const entry = { name, score: finalScore, lines: finalLines, maxCombo: finalMaxCombo };
+      const scores = saveScore(entry); // may throw QuotaExceededError; saved stays false so user can retry
+      saved = true;
+      const idx = scores.indexOf(entry); // reference equality — always finds the right slot
+      nameEntry.classList.add('hidden');
+      renderScoresTable(scores, idx, overlayScoresEl);
+      renderSidebarScores();
+    };
+
+    saveScoreBtn.onclick = doSave;
+    nameInput.onkeydown = e => { if (e.key === 'Enter') doSave(); };
+  } else {
+    renderScoresTable(loadScores(), -1, overlayScoresEl);
+  }
+
   overlay.classList.remove('hidden');
 }
 
@@ -298,6 +395,7 @@ function init() {
   score = 0;
   lines = 0;
   level = 1;
+  maxCombo = 0;
   paused = false;
   gameOver = false;
   dropInterval = 1000;
@@ -307,8 +405,11 @@ function init() {
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  saveScoreBtn.onclick = null;
+  nameInput.onkeydown = null;
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
+  renderSidebarScores();
 }
 
 document.addEventListener('keydown', e => {
@@ -337,6 +438,12 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+clearScoresBtn.addEventListener('click', () => {
+  localStorage.removeItem(LS_KEY);
+  renderSidebarScores();
+  renderScoresTable([], -1, overlayScoresEl);
+});
 
 const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click', () => {
